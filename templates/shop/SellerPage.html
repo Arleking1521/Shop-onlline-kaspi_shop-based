@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% block content %}
+<div class="seller-info">
+    {% if seller_info.log_img %}
+    <img src="{{ seller_info.log_img.url }}" alt="" class="logo-img">
+    {% endif %}
+    <div class="info">   
+        <h3>{{seller_info.title}} в городе {{seller_info.city}}</h3>
+        <p>В Kaspi Магазине с {{seller_info.reg_date}}</p>
+        <p>
+            {% for i in "12345" %}
+                {% if forloop.counter <= avg_rate|default:0 %}
+                    ★
+                {% else %}
+                    ☆
+                {% endif %}
+            {% endfor %}
+        </p>
+        <p>Рейтинг рассчитан на основе оценок покупателей за весь приод существования магазина</p>
+        <div class="phone">
+            <img src="{% static 'assets/iphone.png' %}" alt="" width="20px">
+            <p>{{seller_info.phone_number}}</p>
+        </div>
+    </div> 
+</div>
+<div class="seller-review">
+    {% for review in reviews %}
+        <div>
+            <div>
+                {% for i in "12345" %}
+                    {% if forloop.counter <= review.rating|default:0 %}
+                        ★
+                    {% else %}
+                        ☆
+                    {% endif %}
+                {% endfor %}
+                <p>{{review.author.first_name}}</p>
+                <p>{{review.date}}</p>
+            </div>
+            <div>
+                <p> {{review.comment}}</p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

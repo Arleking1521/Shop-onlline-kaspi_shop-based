@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="main_card">
+    <div class="img_card">
+        <div class="main_image">
+            <img id="displayed_image" src="" alt="Selected Image">
+        </div>
+        <div class="thumbnails">
+            {% for image in info.images %}
+                <div class="thumbnail">
+                    <img src="{{ image.image_link.url }}" >
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="info_card">
+            <p>{{ info.product.title }}</p>
+            <div class="reviews">
+                <p>
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= info.avg_rate|default:0 %}
+                            ★
+                        {% else %}
+                            ☆
+                        {% endif %}
+                    {% endfor %}
+                </p>
+                <p>({{ info.review_count }} отзыва)</p>
+            </div>
+            <p>Цена: {{ info.min_price }} тг</p>
+            <div class="specific">
+                {% for specific in specifics %}
+                    <p>-{{specific.spec_name}} : {{specific.value}}</p>
+                {% endfor %}
+            </div>
+            
+    </div>
+</div>
+<div class="tabs">
+    <!-- Заголовки вкладок -->
+    <div class="tab-header">
+        <button class="tab-link active" data-tab="tab1">Продавцы</button>
+        <button class="tab-link" data-tab="tab2">Отзывы</button>
+        <button class="tab-link" data-tab="tab3">Характеристики</button>
+        <button class="tab-link" data-tab="tab4">Описание</button>
+    </div>
+
+    <!-- Содержимое вкладок -->
+    <div class="tab-content">
+        <div id="tab1" class="tab-pane active">
+            {% for shop in shops %}
+                <div class="seller"> 
+                    <a href="{% url 'seller_details' sid=shop.seller.pk %}">
+                        <p>{{shop.seller.title}}</p> 
+                    </a>
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= shop.rating|default:0 %}
+                            ★
+                        {% else %}
+                            ☆
+                        {% endif %}
+                    {% endfor %}
+                    <p>({{ shop.reviews_count }} отзыва)</p>
+                    <p>Цена: {{shop.price}} тг.</p>
+                </div>
+            {% endfor %}
+        </div>
+        <div id="tab2" class="tab-pane">
+            {% for review in reviews %}
+                <div>
+                    <div>
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating|default:0 %}
+                                ★
+                            {% else %}
+                                ☆
+                            {% endif %}
+                        {% endfor %}
+                        <p>{{review.author.first_name}}</p>
+                        <p>{{review.date}}</p>
+                    </div>
+                    <div>
+                        <p> {{review.comment}}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div id="tab3" class="tab-pane">
+            {% for specification in specifications %}
+                <div>
+                    <h2>{{ specification.0 }}</h2>
+                    {% for spec in specification.1 %}
+                        <p>-{{spec.spec_name}} : {{spec.value}}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            
+        </div>
+        <div id="tab4" class="tab-pane">
+            <p>{{ info.product.description }}</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Получаем элементы
+    const thumbnails = document.querySelectorAll('.thumbnail img');
+    const displayedImage = document.getElementById('displayed_image');
+    if(thumbnails.length>0){
+        displayedImage.src=thumbnails[0].src
+    }
+    // Обработчик события клика
+    thumbnails.forEach(thumbnail => {
+        thumbnail.addEventListener('click', () => {
+            // Устанавливаем src выбранного изображения
+            displayedImage.src = thumbnail.src;
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        tabLinks.forEach(tab => {
+            tab.addEventListener('click', function () {
+                // Убираем активный класс со всех вкладок и их содержимого
+                tabLinks.forEach(link => link.classList.remove('active'));
+                tabPanes.forEach(pane => pane.classList.remove('active'));
+
+                // Добавляем активный класс на выбранную вкладку и её содержимое
+                this.classList.add('active');
+                const target = document.getElementById(this.dataset.tab);
+                target.classList.add('active');
+            });
+        });
+    });
+    
+</script>
+{% endblock  %}

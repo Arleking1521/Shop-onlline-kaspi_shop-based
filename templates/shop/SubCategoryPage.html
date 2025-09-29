@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+    <ul>
+    {% for subcategory in subcat %}
+        <li>
+            <a href="{% url 'sub_category' cid=cid subid=subcategory.pk %}">
+            <p>{{ subcategory.title }}</p>
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+    <div class='cat-row'>
+        {% for product in products %}
+        <a href="{% url 'details_page' pid=product.product.pk %}">
+            <div class = 'subcat-cart'>
+                
+                <img src="{{ product.image.url }}" class="subc-img">
+                <p>{{ product.product.title }}</p>
+                <p>
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= product.review_rate|default:0 %}
+                            ★
+                        {% else %}
+                            ☆
+                        {% endif %}
+                    {% endfor %}
+                    ({{product.review_count}} отзыва)
+                    {{product.min_price}} тг
+                </p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+{% endblock %}
