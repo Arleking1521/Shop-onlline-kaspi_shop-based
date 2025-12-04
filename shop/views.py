@@ -109,13 +109,16 @@ from .serializer import *
 # from rest_framework.response import Response
 from django.http import JsonResponse
 from rest_framework import status
+
+site_host='http://194.110.55.14'
+
 class CategoriesView(APIView):
     def get(self, request):
         categories = Categories.objects.all()
         serialized = CategorySerializer(categories, many=True)
         for category in serialized.data:
             if category['image_link']:
-                category['image_link'] = f'http://127.0.0.1:8000{category["image_link"]}'
+                category['image_link'] = f'{site_host}{category["image_link"]}'
         return JsonResponse(serialized.data, safe = False)
 
     def post(self, request):
@@ -131,7 +134,7 @@ class CategoryView(APIView):
             serialized = CategorySerializer(category)
             data = serialized.data
             if data['image_link']:
-                data['image_link'] = f'http://127.0.0.1:8000{data["image_link"]}'
+                data['image_link'] = f'{site_host}{data["image_link"]}'
             return JsonResponse(data)
         except:
             return JsonResponse({"error": "Category with this ID not found"}, status = status.HTTP_404_NOT_FOUND)
@@ -206,7 +209,7 @@ class SellersView(APIView):
         serialized = SellerSerializer(seller, many=True)
         for seller in serialized.data:
             if seller['log_img']:
-                seller['log_img'] = f'http://127.0.0.1:8000{seller["log_img"]}'
+                seller['log_img'] = f'{site_host}{seller["log_img"]}'
         return JsonResponse(serialized.data, safe = False)
     
     def post(self, request):
@@ -222,7 +225,7 @@ class SellerView(APIView):
             serialized = SellerSerializer(seller)
             data = serialized.data
             if data['log_img']:
-                data['log_img'] = f'http://127.0.0.1:8000{data["log_img"]}'
+                data['log_img'] = f'{site_host}{data["log_img"]}'
             return JsonResponse(data)
         except:
             return JsonResponse({"error": "Seller with this ID not found"}, status = status.HTTP_404_NOT_FOUND)
