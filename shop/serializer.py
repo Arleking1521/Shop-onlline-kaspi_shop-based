@@ -17,13 +17,21 @@ class SubcategorySerializer(serializers.ModelSerializer):
         model = Subcategory
         fields = ('id', 'title', 'base_specifications', 'category_id')
 
+
+class Spec_valSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='specification.name', read_only=True)
+    class Meta:
+        model = Spec_vals
+        fields = ('id', 'values', 'prod_id', 'specification_id', 'name')
+
 class ProductSerializer(serializers.ModelSerializer):
     min_price = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
     category_id = serializers.IntegerField(source='subcat.category_id', read_only=True)
+    specifications = Spec_valSerializer(source='spec_vals_set', many=True, read_only=True)
     class Meta:
         model = Product
-        fields = ('id', 'title', 'description', 'subcat_id', 'min_price', 'average_rating', 'category_id')
+        fields = ('id', 'title', 'description', 'subcat_id', 'min_price', 'average_rating', 'category_id', 'specifications')
     def get_min_price(self, obj):
         if hasattr(obj, 'calculated_min_price'):
             return obj.calculated_min_price
@@ -56,11 +64,6 @@ class SpecificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Specification
         fields = ('id', 'name', 'spec_cat_id', 'subcat_id')
-
-class Spec_valSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Spec_vals
-        fields = ('id', 'values', 'prod_id', 'specification_id')
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
