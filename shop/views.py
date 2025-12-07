@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import *
-from django.db.models import Avg, Min
+from django.db.models import Avg, Min, Q
 import math
 
 # Create your views here.
