@@ -67,6 +67,31 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'min_price', 'average_rating', 'review_count', 'main_image',
             'images', 'specifications', 'sellers_prod'
         )
+    def get_min_price(self, obj):
+        if hasattr(obj, 'calculated_min_price'):
+            return obj.calculated_min_price
+        aggregation = obj.sellers_prod_set.aggregate(min_price=Min('price'))
+        return aggregation.get('min_price')
+        
+    def get_average_rating(self, obj):
+        if hasattr(obj, 'calculated_average_rating'):
+            rating = obj.calculated_average_rating
+            if rating is not None:
+                return round(rating, 1)
+            return None
+        return None 
+    def get_review_count(self, obj):
+        if hasattr(obj, 'calculated_review_count'):
+            return obj.calculated_review_count
+        
+        return 0
+
+    def get_main_image(self, obj):
+        first_image = obj.images_set.order_by('id').values('image_link').first()
+        
+        if first_image:
+            return first_image['image_link']
+        return None
 
 class ProductSerializer(serializers.ModelSerializer):
     min_price = serializers.SerializerMethodField()
