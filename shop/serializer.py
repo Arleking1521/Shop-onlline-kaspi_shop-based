@@ -19,10 +19,11 @@ class SubcategorySerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     min_price = serializers.SerializerMethodField()
-    average_rating = serializers.SerializerMethodField() 
+    average_rating = serializers.SerializerMethodField()
+    category_id = serializers.IntegerField(source='subcat.category_id', read_only=True)
     class Meta:
         model = Product
-        fields = ('id', 'title', 'description', 'subcat_id', 'min_price', 'average_rating')
+        fields = ('id', 'title', 'description', 'subcat_id', 'min_price', 'average_rating', 'category_id')
     def get_min_price(self, obj):
         if hasattr(obj, 'calculated_min_price'):
             return obj.calculated_min_price
