@@ -254,7 +254,7 @@ class SellerView(APIView):
 class ProductsView(APIView):
     def get(self, request):
         subcat_id = request.query_params.get('subcat_id')
-        cat_id = request.query_params.get('cat_id')
+        cat_id = request.query_params.get('category_id')
         queryset = Product.objects.all()
         if subcat_id:
             queryset = queryset.filter(subcat__id=subcat_id)
