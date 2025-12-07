@@ -159,21 +159,23 @@ class CategoryView(APIView):
             return JsonResponse({"error": "Category with this ID not found"}, status = status.HTTP_404_NOT_FOUND)
 
 
-
-
-
-
 class SubCategoriesView(APIView):
     def get(self, request):
-        subcategory = Subcategory.objects.all()
-        serialized = SubcategorySerializer(subcategory, many=True)
-        return JsonResponse(serialized.data, safe = False)
-    
+        category_id = request.query_params.get('category_id')
+        
+        if category_id:
+            subcategories = Subcategory.objects.filter(category__id=category_id)
+        else:
+            subcategories = Subcategory.objects.all()
+        serialized = SubcategorySerializer(subcategories, many=True)
+        return JsonResponse(serialized.data)
+
     def post(self, request):
         serialized = SubcategorySerializer(data=request.data)
-        if serialized.is_valid(raise_exception=True):
+        if serialized.is_valid():
             serialized.save()
             return JsonResponse(serialized.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serialized.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class SubCategoryView(APIView):
     def get(self, request, scid):
