@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import *
-from django.db.models import Avg, Min, Q
+from django.db.models import Avg, Min, Q, Count
 import math
 
 # Create your views here.
@@ -284,32 +284,24 @@ class ProductsView(APIView):
 
 
 class ProductView(APIView):
-    def get(self,request, pid):
-        try:
-            product = Product.objects.get(id=pid)
-            serialized = ProductSerializer(product)
-            return JsonResponse(serialized.data)
-        except:
-            return JsonResponse({"error": "Seller with this ID not found"}, status = status.HTTP_404_NOT_FOUND)
-    
-    def put(self, request, pid):
-        try:
-            product = Product.objects.get(id=pid)
-            serialized = ProductSerializer(product, data=request.data)
-            if serialized.is_valid():
-                serialized.save()
-                return JsonResponse(serialized.data)
-            return JsonResponse(serialized.errors, status = status.HTTP_400_BAD_REQUEST)
-        except:
-            return JsonResponse({"error": "Product with this ID not found"}, status=status.HTTP_404_NOT_FOUND)
+    def get(self, request, pid):
+        product = Product.objects.filter(id=pid).annotate(
+            calculated_min_price=Min('sellers_prod__price', filter=Q(sellers_prod__choice_btn=True)),
+            calculated_average_rating=Avg('sellers_prod__review__rating'),
+            calculated_review_count=Count('sellers_prod__review') 
+        ).prefetch_related(
+            'images_set',
+            'sellers_prod_set',
+            'sellers_prod_set__seller',
+            'spec_vals_set',
+            'spec_vals_set__specification',
+            'spec_vals_set__specification__spec_cat'
+        ).first()
         
-    def delete(self,request, pid):
-        try:
-            product = Product.objects.get(id=pid)
-            product.delete()
-            return JsonResponse({"message: Seller was deleted"}, status=status.HTTP_204_NO_CONTENT)
-        except:
-            return JsonResponse({"error: Product with this ID not found"}, status=status.HTTP_404_NOT_FOUND)
+        if product is None:
+             return JsonResponse({"error": "Product with this ID not found"}, status=status.HTTP_404_NOT_FOUND)
+        serialized = ProductDetailSerializer(product)
+        return JsonResponse(serialized.data)
 
 
 class ImagesView(APIView):
