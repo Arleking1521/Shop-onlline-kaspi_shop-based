@@ -29,9 +29,15 @@ class ProductSerializer(serializers.ModelSerializer):
     average_rating = serializers.SerializerMethodField()
     category_id = serializers.IntegerField(source='subcat.category_id', read_only=True)
     specifications = Spec_valSerializer(source='spec_vals_set', many=True, read_only=True)
+    main_image = serializers.SerializerMethodField()
     class Meta:
         model = Product
-        fields = ('id', 'title', 'description', 'subcat_id', 'min_price', 'average_rating', 'category_id', 'specifications')
+        fields = ('id', 'title', 'description', 'subcat_id', 'min_price', 'average_rating', 'category_id', 'specifications', 'main_image')
+    def get_main_image(self, obj):
+        first_image = obj.images_set.order_by('id').values('image_link').first()
+        if first_image:
+            return first_image['image_link']
+        return None
     def get_min_price(self, obj):
         if hasattr(obj, 'calculated_min_price'):
             return obj.calculated_min_price
