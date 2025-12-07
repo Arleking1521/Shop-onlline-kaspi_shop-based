@@ -162,7 +162,6 @@ class CategoryView(APIView):
 class SubCategoriesView(APIView):
     def get(self, request):
         category_id = request.query_params.get('category_id')
-        
         if category_id:
             subcategories = Subcategory.objects.filter(category__id=category_id)
         else:
@@ -253,16 +252,28 @@ class SellerView(APIView):
 
 
 class ProductsView(APIView):
-    def get(self,request):
-        product = Product.objects.all()
-        serialized = ProductSerializer(product, many=True)
-        return JsonResponse(serialized.data, safe = False)
-    
+    def get(self, request):
+        subcat_id = request.query_params.get('subcat_id')
+        cat_id = request.query_params.get('cat_id')
+        queryset = Product.objects.all()
+        if subcat_id:
+            queryset = queryset.filter(subcat__id=subcat_id)
+        elif cat_id:
+            queryset = queryset.filter(subcat__category__id=cat_id)
+        queryset = queryset.annotate(
+            calculated_min_price=Min('sellers_prod__price'),
+            calculated_average_rating=Avg('sellers_prod__review__rating') 
+        )
+        serialized = ProductSerializer(queryset, many=True)
+        return JsonResponse(serialized.data, safe=False)
+
     def post(self, request):
         serialized = ProductSerializer(data=request.data)
-        if serialized.is_valid(raise_exception=True):
+        if serialized.is_valid():
             serialized.save()
             return JsonResponse(serialized.data, status=status.HTTP_201_CREATED)
+        
+        return JsonResponse(serialized.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProductView(APIView):
