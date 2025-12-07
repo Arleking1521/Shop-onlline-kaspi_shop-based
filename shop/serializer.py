@@ -17,38 +17,6 @@ class SubcategorySerializer(serializers.ModelSerializer):
         model = Subcategory
         fields = ('id', 'title', 'base_specifications', 'category_id')
 
-class ProductSerializer(serializers.ModelSerializer):
-    min_price = serializers.SerializerMethodField()
-    average_rating = serializers.SerializerMethodField()
-    category_id = serializers.IntegerField(source='subcat.category_id', read_only=True)
-    specifications = Spec_valSerializer(source='spec_vals_set', many=True, read_only=True)
-    main_image = serializers.SerializerMethodField()
-    review_count = serializers.SerializerMethodField()
-    class Meta:
-        model = Product
-        fields = ('id', 'title', 'description', 'subcat_id', 'min_price', 'average_rating', 'category_id', 'review_count', 'main_image' 'specifications')
-    def get_main_image(self, obj):
-        first_image = obj.images_set.order_by('id').values('image_link').first()
-        if first_image:
-            return first_image['image_link']
-        return None
-    def get_review_count(self, obj):
-        if hasattr(obj, 'calculated_review_count'):
-            return obj.calculated_review_count
-        return obj.sellers_prod_set.aggregate(count=Count('review'))['count']
-    def get_min_price(self, obj):
-        if hasattr(obj, 'calculated_min_price'):
-            return obj.calculated_min_price
-        aggregation = obj.sellers_prod_set.aggregate(min_price=Min('price'))
-        return aggregation.get('min_price')
-    def get_average_rating(self, obj):
-        if hasattr(obj, 'calculated_average_rating'):
-            return obj.calculated_average_rating
-        aggregation = Review.objects.filter(
-            sell_prod__prod=obj
-        ).aggregate(avg_rating=Avg('rating'))
-        return aggregation.get('avg_rating')
-
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Images
@@ -99,3 +67,35 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'min_price', 'average_rating', 'review_count', 'main_image',
             'images', 'specifications', 'sellers_prod'
         )
+
+class ProductSerializer(serializers.ModelSerializer):
+    min_price = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
+    category_id = serializers.IntegerField(source='subcat.category_id', read_only=True)
+    specifications = Spec_valSerializer(source='spec_vals_set', many=True, read_only=True)
+    main_image = serializers.SerializerMethodField()
+    review_count = serializers.SerializerMethodField()
+    class Meta:
+        model = Product
+        fields = ('id', 'title', 'description', 'subcat_id', 'min_price', 'average_rating', 'category_id', 'review_count', 'main_image' 'specifications')
+    def get_main_image(self, obj):
+        first_image = obj.images_set.order_by('id').values('image_link').first()
+        if first_image:
+            return first_image['image_link']
+        return None
+    def get_review_count(self, obj):
+        if hasattr(obj, 'calculated_review_count'):
+            return obj.calculated_review_count
+        return obj.sellers_prod_set.aggregate(count=Count('review'))['count']
+    def get_min_price(self, obj):
+        if hasattr(obj, 'calculated_min_price'):
+            return obj.calculated_min_price
+        aggregation = obj.sellers_prod_set.aggregate(min_price=Min('price'))
+        return aggregation.get('min_price')
+    def get_average_rating(self, obj):
+        if hasattr(obj, 'calculated_average_rating'):
+            return obj.calculated_average_rating
+        aggregation = Review.objects.filter(
+            sell_prod__prod=obj
+        ).aggregate(avg_rating=Avg('rating'))
+        return aggregation.get('avg_rating')
