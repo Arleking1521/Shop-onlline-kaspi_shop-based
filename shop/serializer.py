@@ -77,7 +77,7 @@ class ProductSerializer(serializers.ModelSerializer):
     review_count = serializers.SerializerMethodField()
     class Meta:
         model = Product
-        fields = ('id', 'title', 'description', 'subcat_id', 'min_price', 'average_rating', 'category_id', 'review_count', 'main_image' 'specifications')
+        fields = ('id', 'title', 'description', 'subcat_id', 'min_price', 'average_rating', 'category_id', 'review_count', 'main_image', 'specifications')
     def get_main_image(self, obj):
         first_image = obj.images_set.order_by('id').values('image_link').first()
         if first_image:
