@@ -168,7 +168,7 @@ class SubCategoriesView(APIView):
         else:
             subcategories = Subcategory.objects.all()
         serialized = SubcategorySerializer(subcategories, many=True)
-        return JsonResponse(serialized.data)
+        return JsonResponse(serialized.data, safe=False)
 
     def post(self, request):
         serialized = SubcategorySerializer(data=request.data)
