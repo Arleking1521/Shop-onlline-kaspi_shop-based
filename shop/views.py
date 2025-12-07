@@ -261,8 +261,15 @@ class ProductsView(APIView):
         elif cat_id:
             queryset = queryset.filter(subcat__category__id=cat_id)
         queryset = queryset.annotate(
-            calculated_min_price=Min('sellers_prod__price'),
+            calculated_min_price=Min(
+                'sellers_prod__price', 
+                filter=Q(sellers_prod__choice_btn=True)
+            ),
             calculated_average_rating=Avg('sellers_prod__review__rating') 
+        )
+        queryset = queryset.prefetch_related(
+            'spec_vals_set',
+            'spec_vals_set__specification'
         )
         serialized = ProductSerializer(queryset, many=True)
         return JsonResponse(serialized.data, safe=False)
