@@ -70,6 +70,7 @@ AUTHENTICATION_BACKENDS = [
     'users.backend.PhoneBackend',
 ]
 
+
 ROOT_URLCONF = 'kaspi_web.urls'
 
 TEMPLATES = [
@@ -162,6 +163,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = False  
+CORS_ALLOW_CREDENTIALS = True  # Разрешает куки в кросс-доменных запросах
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001",
