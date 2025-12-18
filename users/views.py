@@ -6,11 +6,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
 from django.http import JsonResponse
-
+from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import RegisterSerializer, LoginSerializer, UserProfileSerializer
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser]  # ← ОБЯЗАТЕЛЬНО
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -18,12 +19,13 @@ class RegisterView(APIView):
         user = serializer.save()
 
         refresh = RefreshToken.for_user(user)
-        return Response({
+        return JsonResponse({
             "user": {
                 "id": user.id,
                 "phone": user.phone,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
+                "image": user.image.url if user.image else None,
             },
             "refresh": str(refresh),
             "access": str(refresh.access_token),

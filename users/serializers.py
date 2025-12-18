@@ -8,7 +8,14 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('phone', 'username', 'first_name', 'last_name', 'date_of_birth', 'address', 'password')
+        fields = ('phone', 
+                  'username', 
+                  'first_name', 
+                  'last_name', 
+                  'date_of_birth', 
+                  'address', 
+                  'image',
+                  'password')
 
     def create(self, validated_data):
         password = validated_data.pop('password')
