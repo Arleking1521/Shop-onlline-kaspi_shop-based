@@ -8,13 +8,16 @@ from django.conf import settings
 from django.http import JsonResponse
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import RegisterSerializer, LoginSerializer, UserProfileSerializer
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework import generics
 
-class RegisterView(APIView):
+class RegisterView(generics.CreateAPIView):
     permission_classes = [AllowAny]
-    parser_classes = [MultiPartParser, FormParser]  # ← ОБЯЗАТЕЛЬНО
+    serializer_class = RegisterSerializer
+    parser_classes = [MultiPartParser, FormParser]
 
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
@@ -59,4 +62,42 @@ class LoginView(APIView):
             max_age=7 * 24 * 60 * 60 # Срок жизни (например, 7 дней)
         )
         
+        return response
+
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]  # ← чтобы менять аватар
+
+    def get(self, request):
+        serializer = UserProfileSerializer(request.user)
+        return JsonResponse(serializer.data)
+
+    def patch(self, request):
+        serializer = UserProfileSerializer(
+            request.user,
+            data=request.data,
+            partial=True  # ← можно обновлять не все поля
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return JsonResponse(serializer.data, status=status.HTTP_200_OK)
+    
+class CookieTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        # Пытаемся достать refresh_token из кук
+        refresh_token = request.COOKIES.get('refresh_token')
+        
+        if refresh_token:
+            # Если кука есть, "подсовываем" её в данные запроса, 
+            # чтобы стандартная логика SimpleJWT её нашла
+            request.data['refresh'] = refresh_token
+        
+        return super().post(request, *args, **kwargs)
+    
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        response = Response({"detail": "Logged out"})
+        response.delete_cookie("refresh_token", path="/api/auth/token/refresh/")
         return response

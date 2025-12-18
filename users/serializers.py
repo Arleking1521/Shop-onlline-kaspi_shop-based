@@ -45,6 +45,31 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(required=False)
+
     class Meta:
         model = User
-        fields = ['id', 'image', 'phone', 'first_name', 'last_name'] # Только публичные данные
+        fields = (
+            "id",
+            "phone",
+            "username",
+            "first_name",
+            "last_name",
+            "date_of_birth",
+            "address",
+            "image",
+        )
+        read_only_fields = ("id", "phone", "username")  # что нельзя менять
+
+    def update(self, instance, validated_data):
+        # если передали новую картинку — заменяем
+        image = validated_data.get("image", None)
+        if image:
+            instance.image = image
+
+        for attr, value in validated_data.items():
+            if attr != "image":
+                setattr(instance, attr, value)
+
+        instance.save()
+        return instance
