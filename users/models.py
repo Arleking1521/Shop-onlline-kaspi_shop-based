@@ -6,7 +6,7 @@ class CustomUser(AbstractUser):
     first_name = models.CharField(max_length=50, verbose_name='Имя')
     last_name = models.CharField(max_length=50, verbose_name='Фамилия')
     date_of_birth = models.DateField(default='2000-01-01', verbose_name='Дата рождения')
-    phone = models.CharField(verbose_name='Номер телефона', unique=True)
+    phone = models.CharField(max_length=20, verbose_name='Номер телефона', unique=True)
     address = models.CharField(verbose_name='Адрес проживания', blank=True)
     password = models.CharField(verbose_name='Пароль')
 
