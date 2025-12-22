@@ -84,20 +84,25 @@ class MeView(APIView):
     
 class CookieTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
-        # Пытаемся достать refresh_token из кук
         refresh_token = request.COOKIES.get('refresh_token')
         
         if refresh_token:
-            # Если кука есть, "подсовываем" её в данные запроса, 
-            # чтобы стандартная логика SimpleJWT её нашла
-            request.data['refresh'] = refresh_token
+            mutable_data = request.data.copy()
+            mutable_data['refresh'] = refresh_token
+            serializer = self.get_serializer(data=mutable_data)
+            try:
+                serializer.is_valid(raise_exception=True)
+            except Exception as e:
+                return Response({"detail": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            return Response(serializer.validated_data, status=status.HTTP_200_OK)
         
-        return super().post(request, *args, **kwargs)
+        return Response({"detail": "Refresh token cookie missing"}, status=status.HTTP_400_BAD_REQUEST)
     
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        response = Response({"detail": "Logged out"})
-        response.delete_cookie("refresh_token", path="/api/auth/token/refresh/")
+        response = Response({"detail": "Logged out"}, status=status.HTTP_200_OK)
+        response.delete_cookie("refresh_token", path="/") 
         return response
