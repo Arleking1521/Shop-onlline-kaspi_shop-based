@@ -54,12 +54,13 @@ class LoginView(APIView):
 
         # 2. Устанавливаем refresh_token в HttpOnly Cookie
         response.set_cookie(
-            key='refresh_token', 
+            key='refresh_token',
             value=str(refresh),
-            httponly=True,   # ГЛАВНОЕ: JS не увидит эту куку
-            secure=False,    # Поставьте True, если используете HTTPS (в продакшене обязательно)
-            samesite='Lax',  # Защита от CSRF
-            max_age=7 * 24 * 60 * 60 # Срок жизни (например, 7 дней)
+            httponly=True,
+            secure=False,  # Обязательно False для HTTP
+            samesite='Lax',
+            path='/',      # Обязательно для всех путей
+            max_age=7 * 24 * 60 * 60
         )
         
         return response
