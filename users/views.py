@@ -57,10 +57,13 @@ class LoginView(APIView):
             key='refresh_token',
             value=str(refresh),
             httponly=True,
-            secure=False,   # Оставляем False, так как нет SSL
-            samesite='None', # <--- МЕНЯЕМ НА NONE
+            secure=False,        # Пока нет HTTPS
+            samesite='Lax',      # Как в ваших настройках для сессий
             path='/',
-            max_age=7 * 24 * 60 * 60
+            max_age=7 * 24 * 60 * 60,
+            # Добавляем эти параметры для надежности:
+            domain=None,         
+            # Убедитесь, что время на сервере совпадает с локальным
         )
         
         return response
