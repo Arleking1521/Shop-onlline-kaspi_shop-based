@@ -57,9 +57,9 @@ class LoginView(APIView):
             key='refresh_token',
             value=str(refresh),
             httponly=True,
-            secure=False,  # Обязательно False для HTTP
-            samesite='Lax',
-            path='/',      # Обязательно для всех путей
+            secure=False,   # Оставляем False, так как нет SSL
+            samesite='None', # <--- МЕНЯЕМ НА NONE
+            path='/',
             max_age=7 * 24 * 60 * 60
         )
         
