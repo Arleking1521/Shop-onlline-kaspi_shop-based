@@ -1,10 +1,8 @@
-# accounts/views.py
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.conf import settings
 from django.http import JsonResponse
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import RegisterSerializer, LoginSerializer, UserProfileSerializer
@@ -22,7 +20,7 @@ class RegisterView(generics.CreateAPIView):
         user = serializer.save()
 
         refresh = RefreshToken.for_user(user)
-        return JsonResponse({
+        return Response({
             "user": {
                 "id": user.id,
                 "phone": user.phone,
@@ -46,67 +44,46 @@ class LoginView(APIView):
         refresh = RefreshToken.for_user(user)
         user_data = UserProfileSerializer(user).data
 
-        # 1. Создаем объект ответа БЕЗ refresh в теле JSON
-        response = JsonResponse({
+        # Теперь возвращаем refresh прямо в теле ответа
+        return Response({
             "user": user_data,
             "access": str(refresh.access_token),
+            "refresh": str(refresh),
         }, status=status.HTTP_200_OK)
 
-        # 2. Устанавливаем refresh_token в HttpOnly Cookie
-        response.set_cookie(
-            key='refresh_token',
-            value=str(refresh),
-            httponly=True,
-            secure=False,        # Пока нет HTTPS
-            samesite='Lax',      # Как в ваших настройках для сессий
-            path='/',
-            max_age=7 * 24 * 60 * 60,
-            # Добавляем эти параметры для надежности:
-            domain=None,         
-            # Убедитесь, что время на сервере совпадает с локальным
-        )
-        
-        return response
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]  # ← чтобы менять аватар
+    parser_classes = [MultiPartParser, FormParser]
 
     def get(self, request):
         serializer = UserProfileSerializer(request.user)
-        return JsonResponse(serializer.data)
+        return Response(serializer.data)
 
     def patch(self, request):
         serializer = UserProfileSerializer(
             request.user,
             data=request.data,
-            partial=True  # ← можно обновлять не все поля
+            partial=True
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return JsonResponse(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
+
 class CookieTokenRefreshView(TokenRefreshView):
+    """
+    Теперь этот класс работает стандартно: ожидает 'refresh' в теле POST-запроса
+    """
     def post(self, request, *args, **kwargs):
-        refresh_token = request.COOKIES.get('refresh_token')
-        
-        if refresh_token:
-            mutable_data = request.data.copy()
-            mutable_data['refresh'] = refresh_token
-            serializer = self.get_serializer(data=mutable_data)
-            try:
-                serializer.is_valid(raise_exception=True)
-            except Exception as e:
-                return Response({"detail": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
-            
-            return Response(serializer.validated_data, status=status.HTTP_200_OK)
-        
-        return Response({"detail": "Refresh token cookie missing"}, status=status.HTTP_400_BAD_REQUEST)
-    
+        # Стандартный TokenRefreshView уже умеет брать 'refresh' из request.data
+        return super().post(request, *args, **kwargs)
+
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        response = Response({"detail": "Logged out"}, status=status.HTTP_200_OK)
-        response.delete_cookie("refresh_token", path="/") 
-        return response
+        # При использовании localStorage серверу не нужно удалять куки.
+        # Просто подтверждаем выход.
+        return Response({"detail": "Logged out"}, status=status.HTTP_200_OK)
